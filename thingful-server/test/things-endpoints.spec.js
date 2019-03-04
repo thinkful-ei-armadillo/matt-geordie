@@ -11,6 +11,11 @@ describe('Things Endpoints', function() {
     testReviews,
   } = helpers.makeThingsFixtures()
 
+  function makeAuthHeader(user) {
+    const token = Buffer.from(`${user.user_name}:${user.password}`).toString('base64')
+    return `Bearer ${token}`
+  }
+
   before('make knex instance', () => {
     db = knex({
       client: 'pg',
@@ -38,7 +43,7 @@ describe('Things Endpoints', function() {
     describe('Get /api/things/:thing_id', () => {
       it(`respnds with 401 'Missing bearer token' when no bearer tocken`, () =>{
         return supertest(app)
-          .get(`/api/things/4654165`)
+          .get(`/api/things/1`)
           .expect(401, {error: 'Missing token'})
       })
     })
@@ -75,6 +80,7 @@ describe('Things Endpoints', function() {
         )
         return supertest(app)
           .get('/api/things')
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(200, expectedThings)
       })
     })
@@ -97,6 +103,7 @@ describe('Things Endpoints', function() {
       it('removes XSS attack content', () => {
         return supertest(app)
           .get(`/api/things`)
+          .set('Authorization', makeAuthHeader(testUsers))
           .expect(200)
           .expect(res => {
             expect(res.body[0].title).to.eql(expectedThing.title)
@@ -112,6 +119,7 @@ describe('Things Endpoints', function() {
         const thingId = 123456
         return supertest(app)
           .get(`/api/things/${thingId}`)
+          .set('Authorization', makeAuthHeader(testUsers))
           .expect(404, { error: `Thing doesn't exist` })
       })
     })
@@ -136,6 +144,7 @@ describe('Things Endpoints', function() {
 
         return supertest(app)
           .get(`/api/things/${thingId}`)
+          .set('Authorization', makeAuthHeader(testUsers))
           .expect(200, expectedThing)
       })
     })
@@ -158,6 +167,7 @@ describe('Things Endpoints', function() {
       it('removes XSS attack content', () => {
         return supertest(app)
           .get(`/api/things/${maliciousThing.id}`)
+          .set('Authorization', makeAuthHeader(testUsers))
           .expect(200)
           .expect(res => {
             expect(res.body.title).to.eql(expectedThing.title)
