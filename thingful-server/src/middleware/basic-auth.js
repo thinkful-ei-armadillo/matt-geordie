@@ -26,6 +26,9 @@ function requireAuth(req, res, next){
           error: 'Authorization needed'
         });
       }
+
+      req.user = user;
+
       next();
     }).catch(next);
 
