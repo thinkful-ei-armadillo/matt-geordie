@@ -145,7 +145,16 @@ describe('Things Endpoints', function() {
         return supertest(app)
           .get(`/api/things/${thingId}`)
           .set('Authorization', makeAuthHeader(testUsers))
-          .expect(200, expectedThing)
+          .expect(200)
+          .expect((res) => {
+            expect(res.body.title).to.equal(expectedThing.title);
+
+            const actualDate = new Date(res.body.date_created).toLocaleString();
+            const expectedDate = new Date(expectedThing.date_created).toLocaleString('en', {
+              timeZone: 'UTC'
+            });
+            expect(actualDate).to.equal(expectedDate);
+          })         
       })
     })
 
